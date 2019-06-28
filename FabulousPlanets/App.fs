@@ -11,25 +11,30 @@ open Xamarin.Forms
 module App =
 
     type Model =
-        { CardPageModel: CardPage.Model option }
+        { CardPageModel: CardPage.Model option
+          GuessedNames: string list}
 
     type Msg =
         | CardPageMsg of CardPage.Msg
         | SelectPlanet of int
 
     let init () = 
-        { CardPageModel = None }, Cmd.none
+        { CardPageModel = None 
+          GuessedNames = []}, Cmd.none
 
     let update (msg: Msg) (model: Model) =
         match msg with
         | CardPageMsg msg ->
             let m, cmd, externalMsg = CardPage.update msg model.CardPageModel.Value
 
-            let cmd2 =
-                match externalMsg with
-                | CardPage.ExternalMsg.NoOp -> Cmd.none
+            let cmd2 = Cmd.none
 
-            { model with CardPageModel = Some m }, Cmd.batch [ Cmd.map CardPageMsg cmd; cmd2 ]
+            let model =
+                match externalMsg with
+                | CardPage.ExternalMsg.NoOp -> { model with CardPageModel = Some m } 
+                | CardPage.ExternalMsg.PlanetNamed name -> { model with GuessedNames = (name :: model.GuessedNames) ; CardPageModel = None }
+
+            model, Cmd.batch [ Cmd.map CardPageMsg cmd; cmd2 ]
 
         | SelectPlanet i ->
             let cardPageModel = CardPage.init solarObjects.[i]
@@ -46,6 +51,8 @@ module App =
                     rowdefs=[ "*"; "*"; "*"; "*" ],
                     children=[
                         for i in 0 .. 1 .. (solarObjects.Length - 1) do
+                            let name = solarObjects.[i].Info.Name
+                            let nametoshow = if model.GuessedNames |> List.contains name then name else "???"
                             yield View.Grid(
                                 padding=10.,
                                 verticalOptions=LayoutOptions.Fill,
@@ -53,7 +60,7 @@ module App =
                                 gestureRecognizers=[ View.TapGestureRecognizer(command=(fun () -> dispatch (SelectPlanet i))) ],
                                 children=[
                                     View.Image(source=solarObjects.[i].Info.Name + ".jpg")
-                                    View.Label(text=solarObjects.[i].Info.Name, horizontalTextAlignment=TextAlignment.Center, verticalOptions=LayoutOptions.End).WhiteText()
+                                    View.Label(text=nametoshow, horizontalTextAlignment=TextAlignment.Center, verticalOptions=LayoutOptions.End).WhiteText()
                                 ]
                             ).GridColumn(i % 2)
                              .GridRow(i / 2)

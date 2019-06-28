@@ -112,8 +112,9 @@ type PlanetVisualizerUrhoApp(options: ApplicationOptions) =
                 
             | _ ->
                 // The user uses 1 finger to pan
-                waitTimeBeforeResumeAnimation <- Some defaultWaitTime
-                userPan planet (this.Input.GetTouch(0u).Delta)
+                //waitTimeBeforeResumeAnimation <- Some defaultWaitTime
+                //userPan planet (this.Input.GetTouch(0u).Delta)
+                ()
 
     member this.LoadPlanet (planet: Planet) =
         rotationSpeed <- computeRotationSpeed planet
